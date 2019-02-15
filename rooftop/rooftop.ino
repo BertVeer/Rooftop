@@ -18,7 +18,6 @@ Arduboy2 ardu;
 ArduboyTones sound(ardu.audio.enabled);
 Game& game = *(new Game());
 
-bool sound_on = true;
 bool credits_active = false;
 bool menu_active = false;
 uint8_t menu_index = 0;
@@ -191,7 +190,7 @@ void runCredits()
 void handleMenu() 
 {   
     drawBox(7,4, 115,58);
-    drawText(26,13, sound_on ? "SOUND: ON" : "SOUND: OFF");
+    drawText(26,13, ardu.audio.enabled() ? "SOUND: ON" : "SOUND: OFF");
     drawText(26,24, game.state==Game::TITLE ? "START GAME" : "END GAME");
     drawText(26,35, "RESET");
     drawText(26,46, "CREDITS");
@@ -201,8 +200,7 @@ void handleMenu()
         sound.tones(sfx_menuclick);
         switch(menu_index) {
             case 0: 
-                sound_on = !sound_on; 
-                sound_on ? ardu.audio.on() : ardu.audio.off();
+                ardu.audio.enabled() ? ardu.audio.on() : ardu.audio.off();
                 ardu.audio.saveOnOff();
                 break;
             case 1: 
@@ -217,9 +215,8 @@ void handleMenu()
                 menu_active = false; 
                 break;
             case 2:
-                EEPROM.write(STORE_INIT_ADDR, 255);
+                EEPROM.update(STORE_INIT_ADDR, 255);
                 ardu.audio.on();
-                sound_on = true;
                 game.setState(Game::INIT);
                 menu_active = false; 
                 break;
@@ -345,7 +342,7 @@ void nextFrame()
         case Game::GAMEOVER_WAIT:
         case Game::GAMEOVER:             
         case Game::PLAYING:
-            
+        {    
             // Update game
             Chopper& chopper = game.chopper;
             if (game.state < Game::GAMEOVER_WAIT) {
@@ -359,6 +356,7 @@ void nextFrame()
                 case Game::BUILDING_COLLAPSING: sound.tone(80 + rand()%60); break;
                 case Game::BUILDING_COLLAPSED:
                 case Game::PLAYER_DIED: sound.noTone(); break;
+                default: break;
             }
             if (game.spawn_timeout == 0) {
                 if (game.dude_grabbed) sound.tones(sfx_dudegrab);
@@ -440,6 +438,10 @@ void nextFrame()
                 sound.tones(sfx_menutoggle);
                 menu_active = true; 
             }
+            break;
+        }
+    
+        default:
             break;               
     }
 }
@@ -452,7 +454,6 @@ void setup()
 {
     ardu.begin();
     ardu.setFrameRate(60);
-    sound_on = ardu.audio.enabled();
     sound.volumeMode(VOLUME_ALWAYS_NORMAL);
 
     // Read/prepare EEPROM store
@@ -461,8 +462,7 @@ void setup()
     }
     else {
         ardu.audio.on(); // first run always sound enabled
-        sound_on = true;
-        EEPROM.write(STORE_INIT_ADDR, STORE_COOKIE);
+        EEPROM.update(STORE_INIT_ADDR, STORE_COOKIE);
         EEPROM.put(STORE_SCORE_ADDR, (uint16_t)0);
     } 
     
@@ -482,6 +482,5 @@ void loop()
         ardu.pollButtons();
         nextFrame();
         ardu.display();
-        ardu.idle();
     }    
 }

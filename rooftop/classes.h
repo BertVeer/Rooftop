@@ -251,6 +251,8 @@ struct Building
                     }
                 }              
                 break; 
+            default: 
+                break;
         }
         for (uint8_t i=0; i<BUILDING_MAX_FIRES; i++) {
             if (fires[i].active) {
@@ -375,7 +377,8 @@ struct Dude : public Animated
                     }
                     break;
                     
-                case DudeInfo::WANDER:
+                case DudeInfo::WANDER: 
+                {
                     if (building->state == Building::COLLAPSED) { active = false; break; }
                     global_y = (building->y + building->offset_y) - 7;
                     float new_dir = cos(2.0 + counter/40.0);
@@ -393,6 +396,10 @@ struct Dude : public Animated
                             grabbed = true;
                         }
                     }
+                    break;
+                }
+                    
+                default:
                     break;
             }
             lifetime++;
@@ -545,6 +552,8 @@ struct Game
                 chopper.active = false;
                 ufo.active = false;
                 break;
+            default:
+                break;
         }
     }
 
@@ -552,7 +561,7 @@ struct Game
         return buildings.items[index];
     }
     
-    const e_return_event update() 
+    e_return_event update() 
     {
         e_return_event ret_event = NONE;
         if (!chopper.exploding) chopper.update();
@@ -602,7 +611,7 @@ struct Game
                     // Check if dudes need disembarked
                     if (chopper.timeout==0) {            
                         if (chopper.current_stop==4 && !chopper.moving && chopper.dudes_onboard>0) {
-                            dudes.add(&(buildings.items[4]), stops[4]+8, 64-buildings.items[4].y-19, DudeInfo::LEAVE);
+                            dudes.add(&(buildings.items[4]), chopper.x+8, chopper.y+7, DudeInfo::LEAVE);
                             chopper.dudes_onboard--;
                             chopper.timeout = 33; 
                             score++;
@@ -636,6 +645,8 @@ struct Game
                 if (gameover_counter++ > GAMEOVER_DURATION) {
                     return END_GAME;
                 }
+                break;
+            default:
                 break;
         }
         return NONE;
