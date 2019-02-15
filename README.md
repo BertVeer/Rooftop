@@ -2,7 +2,7 @@
 A small game for the Arduboy.\
 Compiled with Arduino 1.8.8
 
-![Screenshots](/image/rooftop.png)
+![Screenshots](/image/screens.png)
 
 Instructions:
 ```
