@@ -16,7 +16,7 @@ constexpr uint16_t STORE_SCORE_ADDR = 912;
 
 Arduboy2 ardu;
 ArduboyTones sound(ardu.audio.enabled);
-Game& game = *(new Game());
+Game game;
 
 bool credits_active = false;
 bool menu_active = false;
@@ -200,7 +200,7 @@ void handleMenu()
         sound.tones(sfx_menuclick);
         switch(menu_index) {
             case 0: 
-                ardu.audio.enabled() ? ardu.audio.on() : ardu.audio.off();
+                ardu.audio.toggle();
                 ardu.audio.saveOnOff();
                 break;
             case 1: 
@@ -247,19 +247,21 @@ void handleMenu()
 void handleInput()
 {
     static bool wasNoroomSoundPlayed = false;
+    bool rope_extended = false;
     
     if (ardu.pressed(LEFT_BUTTON)) game.moveChopper(DIRECTION_LEFT);
     else if (ardu.pressed(RIGHT_BUTTON)) game.moveChopper(DIRECTION_RIGHT); 
     
-    if (ardu.pressed(DOWN_BUTTON)) {
-        if (!game.commandRope(ROPE_EXTEND) && game.chopper.dudes_onboard >= CHOPPER_CAPACITY && !wasNoroomSoundPlayed) {
+    if (ardu.pressed(DOWN_BUTTON) || ardu.pressed(A_BUTTON)) {
+        rope_extended = game.commandRope(ROPE_EXTEND);
+        if (!rope_extended && game.chopper.dudes_onboard >= CHOPPER_CAPACITY && !wasNoroomSoundPlayed) {
             sound.tones(sfx_noroom);
             wasNoroomSoundPlayed = true;
         }
     }
     else wasNoroomSoundPlayed = false;
     
-    if (ardu.pressed(UP_BUTTON)) {
+    if (ardu.pressed(UP_BUTTON) || (ardu.pressed(A_BUTTON) && !rope_extended)) {
         game.commandRope(ROPE_RETRACT);
     }
 }
@@ -461,7 +463,7 @@ void setup()
         game.hiscore = EEPROM.read(STORE_SCORE_ADDR);
     }
     else {
-        ardu.audio.on(); // first run always sound enabled
+        //ardu.audio.on(); // first run always sound enabled (stick with system sound state)
         EEPROM.update(STORE_INIT_ADDR, STORE_COOKIE);
         EEPROM.put(STORE_SCORE_ADDR, (uint16_t)0);
     } 
