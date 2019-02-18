@@ -208,11 +208,11 @@ struct Building
     int16_t offset_y;
     e_state state;
     uint16_t counter;
-    Fire fires[BUILDING_MAX_FIRES];
     uint8_t fire_index;
     uint16_t fire_counter;
     uint16_t extinguish_timer;
     uint8_t dude_count;
+    Fire fires[BUILDING_MAX_FIRES];
 
     void init() {
         offset_x = 0;
