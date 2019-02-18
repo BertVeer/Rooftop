@@ -72,10 +72,13 @@ struct Rope
     float target_length; 
     bool moving;
     bool stopped_moving;
-    bool accessible;
     bool occupied;
     uint16_t timeout;
     bool dude_enter;
+    
+    bool is_accessible() const {
+        return (!moving && !occupied && (length > 0));
+    }
     
     void init() {
         length = 0;
@@ -83,7 +86,6 @@ struct Rope
         moving = false;
         stopped_moving = false;
         occupied = false;
-        accessible = false;
     } 
     
     void update(int16_t px, int16_t py) {
@@ -92,13 +94,11 @@ struct Rope
         dude_enter = false;
         if (abs(length-target_length) > 0.01) {
             moving = true;
-            accessible = false;
             stopped_moving = false;
             length += (target_length > length) ? ROPE_SPEED : -ROPE_SPEED;           
         }
         else {
             length = target_length;
-            accessible = !moving && !occupied && length>0;
             stopped_moving = moving;
             moving = false;
             if (stopped_moving) {
@@ -387,9 +387,8 @@ struct Dude : public Animated
                     if (lifetime > DUDE_ENTER_TIME) {
                         animate();
                         bool xhit = global_x + local_x == rope.x-1;                  
-                        if (building->state < Building::COLLAPSING && rope.accessible && xhit) {
+                        if (building->state < Building::COLLAPSING && rope.is_accessible() && xhit) {
                             rope.occupied = true;
-                            rope.accessible = false;
                             state = DudeInfo::ON_ROPE;
                             global_x = rope.x;
                             local_x = 0;
